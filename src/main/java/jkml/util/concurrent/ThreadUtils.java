@@ -4,9 +4,9 @@ import java.util.concurrent.ThreadFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-public class ConcurrentUtils {
+public class ThreadUtils {
 
-	private ConcurrentUtils() {
+	private ThreadUtils() {
 	}
 
 	public static ThreadFactory createThreadFactory(String namePrefix) {
