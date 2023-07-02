@@ -1,9 +1,12 @@
 package jkml;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -14,42 +17,37 @@ import jkml.util.concurrent.NonQueuingExecutors;
 
 class PollingTests {
 
-	private static final int THREAD_POOL_SIZE = 3;
-
-	private static final long SLEEP_TIME_MS = 100L;
+	private static final int THREAD_POOL_SIZE = 2;
 
 	private final Logger log = LoggerFactory.getLogger(PollingTests.class);
 
 	private final ExecutorService goodExecSvc = NonQueuingExecutors.newFixedThreadPool(THREAD_POOL_SIZE);
 
 	@Test
-	void pollDatabase() {
+	void pollForMessages() throws InterruptedException {
 
 		int totalCount = 10;
 		int submitCount = 0;
 		MyService myService = new MyService();
 
-		while (true) {
+		boolean rejected = false;
 
-			List<String> messages = findMessages(totalCount, submitCount);
-			for (String msg : messages) {
-				try {
-					goodExecSvc.submit(() -> myService.processMessage(msg));
-					++submitCount;
-				} catch (RejectedExecutionException e) {
-					log.debug("No idle thread");
-					break;
-				}
-			}
-
+		List<String> messages = findMessages(totalCount, submitCount);
+		for (String msg : messages) {
 			try {
-				Thread.sleep(SLEEP_TIME_MS);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
+				goodExecSvc.submit(() -> myService.processMessage(msg));
+				++submitCount;
+			} catch (RejectedExecutionException e) {
+				log.debug("No idle thread");
+				rejected = true;
 				break;
 			}
 		}
 
+		assertTrue(rejected);
+
+		goodExecSvc.shutdown();
+		goodExecSvc.awaitTermination(5, TimeUnit.SECONDS);
 	}
 
 	private List<String> findMessages(int totalCount, int submitCount) {
