@@ -19,12 +19,12 @@ import jkml.util.concurrent.BlockingThreadPoolTaskExecutor;
 public class MyConfiguration implements SchedulingConfigurer {
 
 	@Bean
-	public ThreadPoolTaskScheduler taskScheduler(TaskSchedulerBuilder builder) {
+	ThreadPoolTaskScheduler taskScheduler(TaskSchedulerBuilder builder) {
 		return builder.build();
 	}
 
 	@Bean
-	public ThreadPoolTaskExecutor taskExecutor(TaskExecutorBuilder builder) {
+	ThreadPoolTaskExecutor taskExecutor(TaskExecutorBuilder builder) {
 		builder.queueCapacity(0);
 		return builder.build(BlockingThreadPoolTaskExecutor.class);
 	}
