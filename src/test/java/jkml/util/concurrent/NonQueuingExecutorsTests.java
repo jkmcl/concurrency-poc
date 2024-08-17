@@ -1,4 +1,4 @@
-package jkml;
+package jkml.util.concurrent;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -12,14 +12,11 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jkml.service.MyService;
-import jkml.util.concurrent.NonQueuingExecutors;
-
-class PollingTests {
+class NonQueuingExecutorsTests {
 
 	private static final int THREAD_POOL_SIZE = 2;
 
-	private final Logger log = LoggerFactory.getLogger(PollingTests.class);
+	private final Logger log = LoggerFactory.getLogger(NonQueuingExecutorsTests.class);
 
 	private final ExecutorService goodExecSvc = NonQueuingExecutors.newFixedThreadPool(THREAD_POOL_SIZE);
 

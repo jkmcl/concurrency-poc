@@ -1,4 +1,4 @@
-package jkml;
+package jkml.util.concurrent;
 
 import static org.awaitility.Awaitility.await;
 

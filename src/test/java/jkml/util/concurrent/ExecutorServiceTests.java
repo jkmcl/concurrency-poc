@@ -1,4 +1,4 @@
-package jkml;
+package jkml.util.concurrent;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -9,8 +9,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 
 import org.junit.jupiter.api.Test;
-
-import jkml.util.concurrent.NonQueuingExecutors;
 
 class ExecutorServiceTests {
 
