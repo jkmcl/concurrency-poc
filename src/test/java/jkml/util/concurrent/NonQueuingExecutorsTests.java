@@ -1,58 +1,54 @@
 package jkml.util.concurrent;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class NonQueuingExecutorsTests {
 
-	private static final int THREAD_POOL_SIZE = 2;
+	private static final int TASK_COUNT = 3;
 
 	private final Logger log = LoggerFactory.getLogger(NonQueuingExecutorsTests.class);
 
-	private final ExecutorService goodExecSvc = NonQueuingExecutors.newFixedThreadPool(THREAD_POOL_SIZE);
-
-	@Test
-	void pollForMessages() throws InterruptedException {
-
-		int totalCount = 10;
-		int submitCount = 0;
-		MyService myService = new MyService();
-
-		boolean rejected = false;
-
-		List<String> messages = findMessages(totalCount, submitCount);
-		for (String msg : messages) {
-			try {
-				goodExecSvc.submit(() -> myService.processMessage(msg));
-				++submitCount;
-			} catch (RejectedExecutionException e) {
-				log.debug("No idle thread");
-				rejected = true;
-				break;
-			}
-		}
-
-		assertTrue(rejected);
-
-		goodExecSvc.shutdown();
-		goodExecSvc.awaitTermination(5, TimeUnit.SECONDS);
+	@BeforeEach
+	void beforeEach(TestInfo testInfo) {
+		log.info("# Executing test: {}", testInfo.getDisplayName());
 	}
 
-	private List<String> findMessages(int totalCount, int submitCount) {
-		List<String> messages = new ArrayList<>();
-		for (int i = submitCount; i < totalCount; ++i) {
-			messages.add(new String(Integer.toString(i)));
+	private void test(ExecutorService es, int nTasks) {
+		var done = new CountDownLatch(nTasks);
+		for (var i = 0; i < TASK_COUNT; ++i) {
+			es.submit(new MyTask(2, done));
 		}
-		return messages;
+
+		try {
+			done.await();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+		es.shutdown();
+	}
+
+	@Test
+	void testNewFixedThreadPool_original() {
+		var es = Executors.newFixedThreadPool(TASK_COUNT - 1);
+		assertDoesNotThrow(() -> test(es, TASK_COUNT));
+	}
+
+	@Test
+	void testNewFixedThreadPool() {
+		var es = NonQueuingExecutors.newFixedThreadPool(TASK_COUNT - 1);
+		assertThrows(RejectedExecutionException.class, () -> test(es, TASK_COUNT));
 	}
 
 }
